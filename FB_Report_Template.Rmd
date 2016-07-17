@@ -1,0 +1,110 @@
+---
+title: "Data Analysis Notes: Facebook Dashboard"
+author: "Jonathan L Marrero"
+output: html_document
+---
+
+```{r echo=FALSE}
+require(ggplot2)
+
+source("timeClean.R")
+source("getData.R")
+
+require(lubridate)
+
+# if (getwd() != "/Users/Marrero/Downloads") {
+#  setwd("Downloads")
+# }
+
+pageDataPath <- "data/fb_test_datapage.csv"
+postDataPath <- "data/fb_post_data.csv"
+
+## Splitting the date and time into separate parts 
+post <- getPostData(postDataPath)
+page <- getPageData(pageDataPath)
+
+postTimeParts <- timeClean(post$Posted)
+page$Date <- as.Date(page$Date)
+
+post <- post[1:46]
+
+post$Posted <- as.Date(postTimeParts$V1, format = "%m/%d/%Y")
+post$Time <- postTimeParts$V2
+post$AMPM <- postTimeParts$V3
+post$Month <- postTimeParts$V4
+post$Weekday <- postTimeParts$V5
+```
+
+Total number of people who engaged with our posts: 
+```{r echo=FALSE} 
+n1 <- sum(post$Lifetime.Post.Total.Reach)
+n1
+```
+
+
+Number of engagements by post type:
+```{r echo=FALSE}
+tapply(post$Lifetime.Engaged.Users, post$Type, FUN = sum)
+barplot(tapply(post$Lifetime.Engaged.Users, post$Type, sum))
+```
+
+The number of our followers reached by our post:  
+```{r echo=FALSE} 
+n2 <- sum(post$Lifetime.Post.reach.by.people.who.like.your.Page)
+n2
+```
+
+How many times do we post in the morning compared to the evening?
+```{r echo=FALSE}
+barplot(table(post$AMPM))
+```
+
+How many people did we reach by post type?
+```{r echo=FALSE}
+tapply(post$Lifetime.Post.Total.Reach, post$Type, FUN=sum)
+```
+
+How many people did we reach in the morning, afternoon, and evening? 
+```{r echo=FALSE}
+tapply(post$Lifetime.Post.Total.Reach, post$AMPM, FUN=sum)
+barplot(tapply(post$Lifetime.Post.Total.Reach, post$AMPM, FUN=sum)/1000, ylab = "Post Reach x 1,000", main = "Reach by Time of Day", col = "skyblue")
+```
+
+Total posts by AM or PM:
+```{r echo=FALSE}
+barplot(table(post$AMPM))
+```
+
+Total posts by weekday:
+```{r echo=FALSE}
+table(post$Weekday)
+barplot(table(post$Weekday))
+```
+
+Reach by weekday: 
+```{r echo=FALSE}
+tapply(post$Lifetime.Post.Total.Reach, post$Weekday, FUN=sum)
+barplot(tapply(post$Lifetime.Post.Total.Reach, post$Weekday, FUN=sum)/1000)
+```
+
+Average reach in the AM and PM:
+```{r echo=FALSE}
+barplot(tapply(post$Lifetime.Post.Total.Reach, post$AMPM, mean)/1000)
+```
+
+Total number of links clicked: (i.e., traffic generated)
+```{r echo=TRUE}
+sum(post$Lifetime.Post.consumers.by.type...link.clicks, na.rm = TRUE)
+```
+
+Total posts by month:
+```{r echo=FALSE}
+table(post$Month)
+barplot(table(post$Month))
+```
+
+Total number of new likes by month: 
+```{r echo=FALSE}
+tapply(page$Daily.New.Likes, month(page$Date, label = TRUE), sum)
+barplot(tapply(page$Daily.New.Likes, month(page$Date, label = TRUE), sum))
+```
