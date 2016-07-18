@@ -4,11 +4,8 @@ source("getData.R")
 
 require(lubridate)
 
-pageDataPath <- "data/fb_test_datapage.csv"
-postDataPath <- "data/fb_post_data.csv"
-
 ui <- fluidPage(
-  titlePanel("Facebook Dashboard"),
+  titlePanel("Social Media Dashboard"),
   sidebarPanel(
     selectInput(inputId = "select1", "Type:",
                 c("Type" = "typ",
@@ -21,24 +18,26 @@ ui <- fluidPage(
   ),
   mainPanel(
     plotOutput("barplot1"),
-    plotOutput("barplot2")
+    plotOutput("barplot2"),
+    plotOutput("barplot3")
     )
   )
 # r code
 
+# retrieving data
 post <- getPostData(postDataPath)
 page <- getPageData(pageDataPath)
+tw <- read.csv(twDataPath)
 
-postTimeParts <- timeClean(post$Posted)
+# date and time cleanup
+postTimeParts <- fbPostTimeClean(post$Posted)
 page$Date <- as.Date(page$Date)
+twTimeParts <- twTweetTimeClean(tw$time)
 
-post2 <- post[1:46]
+post <- post[1:46]
 
-post2$Posted <- as.Date(postTimeParts$V1, format = "%m/%d/%Y")
-post2$Time <- postTimeParts$V2
-post2$AMPM <- postTimeParts$V3
-post2$Month <- postTimeParts$V4
-post2$Weekday <- postTimeParts$V5
+post <- addPostParts(post, postTimeParts)
+tw <- addTweetParts(tw, twTimeParts)
 
 server <- function(input, output) {
   output$barplot1 <- renderPlot({
@@ -61,6 +60,7 @@ server <- function(input, output) {
       barplot(tapply(df2$Lifetime.Post.Total.Reach, df2$Month, FUN = sum),ylab = "Number of Posts", main = "Number of Posts by Month", col = "green")
     } 
   })
+  output$barplot3 <- renderPlot(boxplot(tw$impressions))
 }
 
 shinyApp(ui = ui, server = server)

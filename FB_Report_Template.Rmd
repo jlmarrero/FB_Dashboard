@@ -19,9 +19,11 @@ require(lubridate)
 pageDataPath <- "data/fb_test_datapage.csv"
 postDataPath <- "data/fb_post_data.csv"
 
+
 ## Splitting the date and time into separate parts 
 post <- getPostData(postDataPath)
 page <- getPageData(pageDataPath)
+
 
 postTimeParts <- timeClean(post$Posted)
 page$Date <- as.Date(page$Date)
